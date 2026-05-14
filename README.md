@@ -3,12 +3,12 @@ FindMate - ML-Enhanced Lost & Found System
 A full-stack lost and found web application with AI-powered matching built with Node.js, Express, MongoDB, and EJS. Features intelligent item matching using machine learning to automatically connect lost and found items.
 🆕 What's New in ML-Enhanced Version
 Images : 
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
+
 ![alt text](image-4.png)
-![alt text](image-5.png)
+![alt text](image-3.png)
+![alt text](image-2.png)
+![alt text](image-1.png)
+![alt text](image.png)
 
 1. AI-Powered Matching
 
