@@ -1,0 +1,147 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">ML Match Review Dashboard</h1>
+    <p class="text-gray-600">Review and verify AI-powered item matches</p>
+  </div>
+
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <form action="/admin/matches/batch-process" method="POST">
+      <button type="submit"
+              class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              onclick="return confirm('Run ML matching for all active lost items against all active found items? This may take a little while.');">
+        Batch Process Matches
+      </button>
+    </form>
+
+    <% if (batchResult) { %>
+      <div class="text-sm px-4 py-2 bg-blue-50 text-blue-800 rounded">
+        <%= batchResult %>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="mb-6 flex flex-wrap gap-2">
+    <a href="/admin/matches?status=pending_review"
+       class="px-3 py-2 rounded text-sm <%= statusFilter === 'pending_review' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>">
+      Pending
+    </a>
+    <a href="/admin/matches?status=verified"
+       class="px-3 py-2 rounded text-sm <%= statusFilter === 'verified' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>">
+      Verified
+    </a>
+    <a href="/admin/matches?status=rejected"
+       class="px-3 py-2 rounded text-sm <%= statusFilter === 'rejected' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>">
+      Rejected
+    </a>
+    <a href="/admin/matches?status=all"
+       class="px-3 py-2 rounded text-sm <%= statusFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>">
+      All Matches
+    </a>
+  </div>
+  
+  <% if (matches.length === 0) { %>
+    <div class="bg-white shadow-md rounded-lg p-12 text-center">
+      <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Pending Matches</h3>
+      <p class="text-gray-600">There are no pending ML matches at the moment.</p>
+    </div>
+  <% } else { %>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Confidence
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Source Item
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Matched Item
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% matches.forEach(match => { %>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 rounded-full text-sm font-semibold
+                    <%= match.confidenceScore >= 0.85 ? 'bg-green-100 text-green-800' : 
+                        match.confidenceScore >= 0.65 ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-gray-100 text-gray-800' %>">
+                    <%= (match.confidenceScore * 100).toFixed(1) %>%
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <div class="font-medium text-gray-900"><%= match.sourceItemId.itemName %></div>
+                    <div class="text-gray-500 text-xs">
+                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                        <%= match.sourceType %>
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <div class="font-medium text-gray-900"><%= match.matchedItemId.itemName %></div>
+                    <div class="text-gray-500 text-xs">
+                      <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded">
+                        <%= match.matchedType %>
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  <%= match.sourceItemId.category %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <%= new Date(match.createdAt).toLocaleDateString() %>
+                  <div class="text-xs text-gray-500">
+                    <%= new Date(match.createdAt).toLocaleTimeString() %>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <a href="/admin/matches/<%= match._id %>" 
+                     class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Review
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+  
+  <div class="mt-6">
+    <a href="/admin/dashboard" class="inline-flex items-center text-blue-600 hover:text-blue-700">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
